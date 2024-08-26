@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:e_bike/screens/devices.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -6,16 +7,16 @@ import 'package:e_bike/screens/scan.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:e_bike/screens/bike.dart';
 
-class TabsScreen extends StatefulWidget {
-  const TabsScreen({super.key});
 
+class TabsScreen extends StatefulWidget {
+   const TabsScreen({super.key});
   @override
   State<TabsScreen> createState() => _TabsscreenState();
 }
 
 class _TabsscreenState extends State<TabsScreen> {
 
-  final FlutterReactiveBle _ble = FlutterReactiveBle();
+  // final FlutterReactiveBle _ble = FlutterReactiveBle();
   int _selectedPageIndex = 0;
   late StreamSubscription<DiscoveredDevice> _scanSubscription;
   late StreamSubscription<BleStatus> _bluetoothStateSubscription;
@@ -134,6 +135,9 @@ class _TabsscreenState extends State<TabsScreen> {
     if (_selectedPageIndex == 1) {
       activePage = const BikeDashboardScreen();
     }
+    else if (_selectedPageIndex == 2) {
+      activePage =   const Devices();
+    }
     return Scaffold(
       appBar: AppBar(
         title: Image.asset(
@@ -164,6 +168,10 @@ class _TabsscreenState extends State<TabsScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.directions_bike),
             label: 'Bike',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Setting',
           ),
         ],
       ),

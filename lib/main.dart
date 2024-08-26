@@ -1,17 +1,17 @@
 import 'package:e_bike/provider/notificationService.dart';
 import 'package:e_bike/screens/loading.dart';
-import 'package:e_bike/screens/tabsscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 void main() {
   runApp(
-      MultiProvider(
-          providers: [
-            ChangeNotifierProvider(create: (_) => NotificationService()),
-          ],
-         child:  const App()),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => NotificationService()),
+      ],
+      child: const App(),
+    ),
   );
 }
 
@@ -25,9 +25,12 @@ class App extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           brightness: Brightness.light,
-          seedColor: const Color.fromARGB(255, 255, 255, 255),
+          seedColor: Colors.blueAccent, // Use a color that matches your gradient
         ),
-        textTheme: GoogleFonts.latoTextTheme(),
+        textTheme: GoogleFonts.latoTextTheme().copyWith(
+          headlineSmall: GoogleFonts.lato(),
+        ),
+        scaffoldBackgroundColor: Colors.transparent, // Ensure background is transparent
       ),
       darkTheme: ThemeData(
         useMaterial3: true,
@@ -35,11 +38,13 @@ class App extends StatelessWidget {
           brightness: Brightness.dark,
           seedColor: const Color.fromARGB(186, 0, 81, 255),
         ),
-        textTheme: GoogleFonts.latoTextTheme(),
+        textTheme: GoogleFonts.latoTextTheme().copyWith(
+          headlineSmall: GoogleFonts.lato(),
+        ),
+        scaffoldBackgroundColor: Colors.transparent, // Ensure background is transparent
       ),
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light,
       home: const Loading(),
-
     );
   }
 }

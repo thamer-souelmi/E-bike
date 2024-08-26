@@ -25,4 +25,12 @@ class NotificationService extends ChangeNotifier {
   String bytesToHex(List<int> bytes) {
     return bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join('-');
   }
+  DiscoveredDevice? _connectedDevice;
+
+  DiscoveredDevice? get connectedDevice => _connectedDevice;
+
+  void setConnectedDevice(DiscoveredDevice device) {
+    _connectedDevice = device;
+    notifyListeners();
+  }
 }

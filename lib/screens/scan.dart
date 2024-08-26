@@ -1,8 +1,10 @@
 import 'dart:async';
-import 'package:e_bike/screens/devices.dart';
+import 'package:e_bike/provider/notificationService.dart';
+import 'package:e_bike/screens/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 class Scan extends StatefulWidget {
   const Scan({super.key});
@@ -13,15 +15,12 @@ class Scan extends StatefulWidget {
 
 class _ScanState extends State<Scan> {
   StreamSubscription<ConnectionStateUpdate>? _connectionSubscription;
-  // @override
-  // Stream<ConnectionStateUpdate> get state => _deviceConnectionController.stream;
-
   final _deviceConnectionController = StreamController<ConnectionStateUpdate>();
   List<DiscoveredDevice> devices = [];
   FlutterReactiveBle flutterReactiveBle = FlutterReactiveBle();
   bool isScanning = false;
   bool isConnected = false;
-  bool connecting = false ;
+  bool connecting = false;
   String? connectedDeviceId;
 
   @override
@@ -29,17 +28,16 @@ class _ScanState extends State<Scan> {
     super.initState();
     requestPermissions();
     _listenToBluetoothState();
-     scan();
-    _connectionSubscription?.cancel();
-
+    scan();
   }
+
   void _listenToBluetoothState() {
     flutterReactiveBle.statusStream.listen((status) {
-      if (!mounted) return; // Add this check
+      if (!mounted) return;
       if (status == BleStatus.poweredOff || status == BleStatus.locationServicesDisabled) {
         _handleBluetoothOff();
-// Bluetooth is on, you can continue BLE operations
       } else {
+        // Bluetooth is on, you can continue BLE operations
       }
     }, onError: (error) {
       print('Bluetooth state stream error: $error');
@@ -47,7 +45,7 @@ class _ScanState extends State<Scan> {
   }
 
   void _handleBluetoothOff() {
-    if (!mounted) return;  // Add this check
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -60,14 +58,10 @@ class _ScanState extends State<Scan> {
       connecting = false;
     });
   }
-  void connect(DiscoveredDevice device) {
 
+  void connect(DiscoveredDevice device) {
     try {
-      _connectionSubscription?.cancel();
-      // if(isConnected) {
-      //   disconnect(connectedDeviceId!);
-      // }
-      // Ensure the previous subscription is cancelled
+      _connectionSubscription?.cancel();  // Ensure the previous subscription is cancelled
     } catch (e) {
       print('Error cancelling previous connection: $e');
     }
@@ -76,36 +70,50 @@ class _ScanState extends State<Scan> {
       connecting = true;
       isScanning = false;
     });
-    _connectionSubscription = flutterReactiveBle.connectToAdvertisingDevice(
+
+    _connectionSubscription = flutterReactiveBle.connectToDevice(
       id: device.id,
-      prescanDuration: const Duration(seconds: 5),
-      withServices: device.serviceUuids,
+      connectionTimeout: const Duration(seconds: 5),
     ).listen((connectionState) async {
       try {
         if (connectionState.connectionState == DeviceConnectionState.connected) {
+          if (!mounted) return;
           setState(() {
             isConnected = true;
             connectedDeviceId = device.id;
             print('Connected to ${device.name}');
             Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => Devices(device: device),
+              builder: (context) => const Home(),
             ));
+            context.read<NotificationService>().setConnectedDevice(device);
           });
         }
       } catch (e) {
         print('Error during connection: $e');
+        if (mounted) {
+          setState(() {
+            connecting = false;
+          });
+        }
+      }
+      if (connectionState.connectionState == DeviceConnectionState.disconnected) {
         setState(() {
-          connecting = false;
+          isConnected = false;
+          connectedDeviceId = null;
         });
+        print('Disconnected from ${device.name}');
       }
     }, onError: (error) {
       print('Connection error: $error');
-      setState(() {
-        connecting = false;
-        isConnected = false;
-      });
+      if (mounted) {
+        setState(() {
+          connecting = false;
+          isConnected = false;
+        });
+      }
     });
   }
+
   Future<void> requestPermissions() async {
     Map<Permission, PermissionStatus> statuses = await [
       Permission.bluetooth,
@@ -115,21 +123,21 @@ class _ScanState extends State<Scan> {
       Permission.location,
     ].request();
 
-    if (statuses[Permission.bluetooth]!.isGranted && statuses[Permission.location]!.isGranted ) {
+    if (statuses[Permission.bluetooth]!.isGranted && statuses[Permission.location]!.isGranted) {
       scan();
     } else {
       const Text("open Bluetooth");
     }
   }
+
   Future<void> disconnect(String deviceId) async {
     try {
-      print('disconnecting to device: $deviceId');
+      print('Disconnecting from device: $deviceId');
       await _connectionSubscription?.cancel();
-      print('disconnected');
-    } on Exception catch (e, _) {
+      print('Disconnected');
+    } on Exception catch (e) {
       print("Error disconnecting from a device: $e");
     } finally {
-      // Since [_connection] subscription is terminated, the "disconnected" state cannot be received and propagated
       _deviceConnectionController.add(
         ConnectionStateUpdate(
           deviceId: deviceId,
@@ -139,96 +147,130 @@ class _ScanState extends State<Scan> {
       );
     }
   }
+
   Future<void> scan() async {
-          // Ensure Bluetooth and location permissions are granted
-          // if (!await _checkPermissions()) {
-          // return;
-          // }
+    devices.clear();
 
-          devices.clear();
-          setState(() {
-            devices.clear();
-            isScanning = true;
-            connecting = false;
-          });
+    setState(() {
+      isScanning = true;
+      connecting = false;
+      _connectionSubscription?.cancel();
+    });
 
-          if (isConnected) {
-          disconnect(connectedDeviceId!);
+    if (isConnected) {
+      _connectionSubscription?.cancel();
+      await disconnect(connectedDeviceId!);
+    }
+
+    flutterReactiveBle.scanForDevices(
+      scanMode: ScanMode.lowLatency,
+      withServices: [],
+    ).listen((device) {
+      if (mounted) {
+        setState(() {
+          if (!devices.any((d) => d.id == device.id) && device.name.startsWith('e')) {
+            devices.add(device);
           }
-
-          flutterReactiveBle.scanForDevices(
-          scanMode: ScanMode.lowLatency,
-          withServices: [],
-          ).listen((device) {
-          setState(() {
-          if (!devices.any((d) => d.id == device.id) && device.name.isNotEmpty) { //device.name.startsWith('e')
-          devices.add(device);
-          }
-          });
-          }, onError: (error) {
-          print('Error: $error');
-          setState(() {
+        });
+      }
+    }, onError: (error) {
+      print('Error: $error');
+      if (mounted) {
+        setState(() {
           isScanning = false;
-          });
-          });
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
-    _connectionSubscription?.cancel(); // Cancel any active connections
-    _deviceConnectionController.close(); // Close the stream controller
+    _connectionSubscription?.cancel();  // Cancel any active connections
+    _deviceConnectionController.close();  // Close the stream controller
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
-    if(isConnected) {
-      _connectionSubscription?.cancel();
-      // disconnect(connectedDeviceId!);
-}
-// print('isconnected : $isConnected  ::: isScanning : $isScanning, connected device : $connectedDeviceId');
-return Scaffold(
-      appBar: AppBar(
-        title: const Text('Scan for Available Bikes'),
-      ),
-      body: Column(
-        children: [
-          ElevatedButton(
-            onPressed:() {isScanning ? null : scan();},
-            child: Text(isScanning ? 'Scanning...' : 'Scan'),
-          ),
-          const SizedBox(height: 20),
-          Expanded(
-            child: devices.isNotEmpty
-                ? ListView.builder(
-              itemCount: devices.length,
-              itemBuilder: (context, index) {
-                final device = devices[index];
-                return Card(
-                  child: ListTile(
-                    title: Text(device.name),
-                    subtitle: Text(device.id),
-                    trailing: TextButton(
-                      onPressed: (
+    const Color primaryColor = Colors.blueAccent;
+    const Color accentColor = Colors.orangeAccent;
+    final Color secondaryColor = Colors.white;
 
-                          ) {
-                         connect(device);
-                        print(device.name);
-                      },
-                      child:  Text(connecting ? 'connecting ...':'Connect'),
-                    ),
-                  ),
-                );
-              },
-            )
-                : Center(
-                  child: Text(isScanning
-                    ? 'Scanning for devices...'
-                      : 'No devices found.'),
-            ),
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [primaryColor, accentColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20.0),
+                child: Text(
+                  'Scan for bike',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: secondaryColor,
+                    shadows: const [
+                      Shadow(
+                        blurRadius: 10.0,
+                        color: Colors.black26,
+                        offset: Offset(2.0, 2.0),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: isScanning ? null : scan,
+                child: Text(isScanning ? 'Scanning...' : 'Scan'),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: devices.isNotEmpty
+                    ? ListView.builder(
+                  itemCount: devices.length,
+                  itemBuilder: (context, index) {
+                    final device = devices[index];
+                    return Card(
+                      color: Colors.white.withOpacity(0.8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      elevation: 5,
+                      child: ListTile(
+                        title: Text(device.name),
+                        subtitle: Text(device.id),
+                        trailing: TextButton(
+                          onPressed: () => connect(device),
+                          child: const Text('Connect'),
+                        ),
+                      ),
+                    );
+                  },
+                )
+                    : Center(
+                  child: Text(isScanning ? 'Scanning for devices...' : 'No devices found.'),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  '© 2024 E-Bike Inc. All rights reserved.',
+                  style: TextStyle(
+                    color: secondaryColor.withOpacity(0.7),
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

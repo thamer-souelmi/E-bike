@@ -1,32 +1,29 @@
 import 'package:e_bike/provider/notificationService.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
-import 'package:provider/provider.dart';
 
 class Gattservice {
 FlutterReactiveBle flutterReactiveBle = FlutterReactiveBle();
 List<String> notifications = [];
-Future<List<DiscoveredService>> discoverServices(String deviceId) async {
-  final FlutterReactiveBle _ble = FlutterReactiveBle();
-
-  try {
-    // Discover services for the given device ID
-    List<DiscoveredService> services = await _ble.discoverServices(deviceId);
-
-    // Debugging: Print out all available services and characteristics
-    for (var service in services) {
-      print('Service: ${service.serviceId}');
-      for (var characteristic in service.characteristics) {
-        print('Characteristic: ${characteristic.characteristicId}');
-      }
-    }
-
-    return services;
-  } catch (e) {
-    print('Service discovery failed: $e');
-    return [];
-  }
-}
+// Future<List<DiscoveredService>> discoverServices(String deviceId) async {
+//   final FlutterReactiveBle _ble = FlutterReactiveBle();
+//
+//   try {
+//     // Discover services for the given device ID
+//     List<DiscoveredService> services = await _ble.discoverServices(deviceId);
+//
+//     // Debugging: Print out all available services and characteristics
+//     for (var service in services) {
+//       print('Service: ${service.serviceId}');
+//       for (var characteristic in service.characteristics) {
+//         print('Characteristic: ${characteristic.characteristicId}');
+//       }
+//     }
+//     return services;
+//   } catch (e) {
+//     print('Service discovery failed: $e');
+//     return [];
+//   }
+// }
   Future<String> readCharacteristic({
     required String deviceId,
     required Uuid serviceId,
@@ -41,6 +38,8 @@ Future<List<DiscoveredService>> discoverServices(String deviceId) async {
       );
       List<int> response = await flutterReactiveBle.readCharacteristic(characteristic);
       print('response : -------- ${bytesToHex(response).toUpperCase()}');
+      // int decimalValue = int.parse(response.toString());
+      print('decimalValue : -------- $response');
       return bytesToHex(response).toUpperCase();
 
     } catch (e) {
