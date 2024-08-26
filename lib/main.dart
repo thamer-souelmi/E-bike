@@ -1,4 +1,4 @@
-import 'package:e_bike/provider/notificationService.dart';
+import 'package:e_bike/data/notificationService.dart';
 import 'package:e_bike/screens/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';

@@ -1,29 +1,10 @@
-import 'package:e_bike/provider/notificationService.dart';
+import 'package:e_bike/data/notificationService.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 
 class Gattservice {
 FlutterReactiveBle flutterReactiveBle = FlutterReactiveBle();
 List<String> notifications = [];
-// Future<List<DiscoveredService>> discoverServices(String deviceId) async {
-//   final FlutterReactiveBle _ble = FlutterReactiveBle();
-//
-//   try {
-//     // Discover services for the given device ID
-//     List<DiscoveredService> services = await _ble.discoverServices(deviceId);
-//
-//     // Debugging: Print out all available services and characteristics
-//     for (var service in services) {
-//       print('Service: ${service.serviceId}');
-//       for (var characteristic in service.characteristics) {
-//         print('Characteristic: ${characteristic.characteristicId}');
-//       }
-//     }
-//     return services;
-//   } catch (e) {
-//     print('Service discovery failed: $e');
-//     return [];
-//   }
-// }
+
   Future<String> readCharacteristic({
     required String deviceId,
     required Uuid serviceId,

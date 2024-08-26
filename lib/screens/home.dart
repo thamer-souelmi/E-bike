@@ -1,4 +1,5 @@
 import 'package:e_bike/screens/devices.dart';
+import 'package:e_bike/screens/firewall.dart';
 import 'package:e_bike/widgets/form.dart';
 import 'package:flutter/material.dart';
 
@@ -113,6 +114,41 @@ class Home extends StatelessWidget {
                               SizedBox(height: 10),
                               Text(
                                 'Update',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                  color: primaryColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const FireWall(),
+                            ),
+                          );
+                        },
+                        child: Card(
+                          color: Colors.white.withOpacity(0.8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          elevation: 5,
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.security,
+                                size: 60,
+                                color: primaryColor,
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                'FireWall',
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w600,

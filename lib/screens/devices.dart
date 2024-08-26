@@ -1,8 +1,8 @@
-import 'package:e_bike/provider/notificationService.dart';
+import 'package:e_bike/data/notificationService.dart';
 import 'package:e_bike/screens/component.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
-import 'package:e_bike/provider/gattservice.dart';
+import 'package:e_bike/data/gattservice.dart';
 import 'package:provider/provider.dart';
 
 class Devices extends StatefulWidget {

@@ -1,5 +1,5 @@
-import 'package:e_bike/provider/gattservice.dart';
-import 'package:e_bike/provider/notificationService.dart';
+import 'package:e_bike/data/gattservice.dart';
+import 'package:e_bike/data/notificationService.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:provider/provider.dart';
@@ -64,24 +64,51 @@ class _FormScreenState extends State<FormScreen> {
       if (device != null) {
         // Convert the input values to hexadecimal
         String partNumberHex = int.parse(_field5Controller.text).toRadixString(16).toUpperCase();
-        String codeManufacturingHex = int.parse(_field1Controller.text).toRadixString(16).toUpperCase();
         String snHex = int.parse(_field4Controller.text).toRadixString(16).toUpperCase();
 
+        // Ensure partNumberHex is 5 characters long
+        if (partNumberHex.length < 5) {
+          partNumberHex = partNumberHex.padLeft(5, '0');
+        } else if (partNumberHex.length > 5) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Part Number hex value is too large')),
+          );
+          return;
+        }
+
+        // Ensure snHex is 6 characters long
+        if (snHex.length < 6) {
+          snHex = snHex.padLeft(6, '0');
+        } else if (snHex.length > 6) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('SN hex value is too large')),
+          );
+          return;
+        }
+
+        String codeManufacturingHex = int.parse(_field1Controller.text).toRadixString(16).toUpperCase();
+
         final fieldValues = [
-          _selectedOption ?? '',
+          _selectedOption,
           partNumberHex,
           codeManufacturingHex,
-          '0${_field2Controller.text[3]}',
+          ('0${_field2Controller.text[3]}'),
           snHex,
         ].join(',');
 
         String value = '55${fieldValues.replaceAll(',', "")}';
+        print(value);
 
         gattservice.writeCharacteristic(
           deviceId: device.id,
           serviceId: Uuid.parse('1162'),
           characteristicId: Uuid.parse('4403'),
           value: value,
+        );
+        gattservice.readCharacteristic(
+            deviceId: device.id,
+            serviceId: Uuid.parse('1162'),
+            characteristicId: Uuid.parse('4403')
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -200,7 +227,7 @@ class _FormScreenState extends State<FormScreen> {
           ),
         ),
         style: const TextStyle(color: secondaryColor),
-        keyboardType: TextInputType.text,
+        keyboardType: TextInputType.number,
         validator: _validatePNField,
       ),
       const SizedBox(height: 20),
@@ -260,7 +287,7 @@ class _FormScreenState extends State<FormScreen> {
     ),
     ),
     style: const TextStyle(color: secondaryColor),
-    keyboardType: TextInputType.text,
+    keyboardType: TextInputType.number,
     validator: _validateSNField,
     ),
     const SizedBox(height: 20),
