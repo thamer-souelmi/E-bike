@@ -13,14 +13,15 @@ class FireWall extends StatefulWidget {
 }
 
 class _FireWallState extends State<FireWall> {
-  List<String> devices = [];
-  List<String> displayedData = [];
   Timer? _timer;
+
+  List<String> _groupedBytes = [];
 
   @override
   void initState() {
     super.initState();
-    _startReadingData();
+    _fetchInitialData(); // Fetch initial data
+    _startReadingData(); // Start periodic updates
   }
 
   @override
@@ -29,16 +30,8 @@ class _FireWallState extends State<FireWall> {
     super.dispose();
   }
 
-  void _startReadingData() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      _fetchDeviceData();
-    });
-  }
-
-  Future<void> _fetchDeviceData() async {
-    final device = context
-        .read<NotificationService>()
-        .connectedDevice;
+  Future<void> _fetchInitialData() async {
+    final device = context.read<NotificationService>().connectedDevice;
 
     if (device != null) {
       Gattservice gattservice = Gattservice();
@@ -49,7 +42,38 @@ class _FireWallState extends State<FireWall> {
           serviceId: Uuid.parse('1166'),
           characteristicId: Uuid.parse('8800'),
         );
-        await processDeviceData(data);
+        await _processDeviceData(data);
+      } catch (e) {
+        // Handle any errors
+        print('Error reading data: $e');
+      }
+    } else {
+      // Handle the case when no device is connected
+      print('No device connected');
+    }
+
+
+  }
+
+  void _startReadingData() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _fetchDeviceData();
+    });
+  }
+
+  Future<void> _fetchDeviceData() async {
+    final device = context.read<NotificationService>().connectedDevice;
+
+    if (device != null) {
+      Gattservice gattservice = Gattservice();
+
+      try {
+        final data = await gattservice.readCharacteristic(
+          deviceId: device.id,
+          serviceId: Uuid.parse('1166'),
+          characteristicId: Uuid.parse('8800'),
+        );
+        await _processDeviceData(data);
       } catch (e) {
         // Handle any errors
         print('Error reading data: $e');
@@ -60,44 +84,43 @@ class _FireWallState extends State<FireWall> {
     }
   }
 
-  Future<void> processDeviceData(String hexString) async {
-    hexString =
-        hexString.replaceAll('[', '').replaceAll(']', '').replaceAll('-', '');
+  Future<void> _processDeviceData(String hexString) async {
+    hexString = hexString
+        .replaceAll('[', '')
+        .replaceAll(']', '')
+        .replaceAll('-', '');
 
-    // Group bytes into chunks of 2 characters (1 byte)
     List<String> groupedBytes = [];
     for (int i = 0; i < hexString.length; i += 2) {
       String chunk = hexString.substring(i, i + 2);
       groupedBytes.add(chunk);
     }
-
+    print(groupedBytes.length);
     if (groupedBytes.length < 5) {
       // Handle the case where the data is too short
       print('Data length is too short');
       return;
     }
 
-    // Parse the bytes
-    String sof = groupedBytes[0];
-    String orByte = groupedBytes[1];
-    String idByte = groupedBytes[2];
-    String sizeByte = groupedBytes[3];
-    String crcByte = groupedBytes.last;
-    List<String> dataBytes = groupedBytes.sublist(4, groupedBytes.length - 1);
+
 
     // Store the parsed bytes in the devices list
     setState(() {
-      devices = [
-        'SOF: $sof',
-        'O-R: $orByte',
-        'ID: $idByte',
-        'Size: $sizeByte',
-        'CRC: $crcByte',
-      ];
-      displayedData = dataBytes;
+
+
+      _groupedBytes = groupedBytes ;
+      print('----$_groupedBytes----');
     });
   }
+  String chunk ="";
+  String convert(String s){
+    // print(s);
+  String chunk = int.parse(s, radix: 16).toString();
+  // print(chunk);
 
+
+return chunk;
+  }
   @override
   Widget build(BuildContext context) {
     // Define a color palette
@@ -117,51 +140,66 @@ class _FireWallState extends State<FireWall> {
         child: SafeArea(
           child: Column(
             children: [
-              const Text(
-                'FireWall',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  shadows: [
-                    Shadow(
-                      blurRadius: 10.0,
-                      color: Colors.black26,
-                      offset: Offset(2.0, 2.0),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Expanded widget ensures the scrollable area takes up the remaining space
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Display non-data bytes (SOF, O-R, ID, Size, CRC)
-                      ...devices.map((device) =>
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4.0),
-                            child: Text(
-                              device,
-                              style: const TextStyle(
-                                  color: Colors.white, fontSize: 18),
-                            ),
-                          )),
-                      const SizedBox(height: 20),
-                      // Display data bytes together on a single line
-                      if (displayedData.isNotEmpty)
-                        Text(
-                          'Data: ${displayedData.join(' ')}',
-                          style: const TextStyle(color: Colors.white,
-                              fontSize: 18),
-                        ),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Firmware ',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 10.0,
+                        color: Colors.black26,
+                        offset: Offset(2.0, 2.0),
+                      ),
                     ],
                   ),
                 ),
               ),
-              // Footer stays at the bottom of the screen
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildInfoCard('SOH',  _groupedBytes.isNotEmpty ?  convert(_groupedBytes[58]): '*', width: 125, height: 100),
+                        _buildInfoCard('SOC',  _groupedBytes.isNotEmpty ? convert(_groupedBytes[59]): '*', width: 150, height: 100),
+                      ],
+                    ),
+                    const SizedBox(height: 15),
+                    _buildInfoCard('Speed', _groupedBytes.isNotEmpty ? convert(_groupedBytes[1]) : '*', width: 150, height: 100),
+                    const SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildInfoCard('ODO', _groupedBytes.length > 3 ? convert('${_groupedBytes[3]}${_groupedBytes[4]} ') : '*', width: 150, height: 100),
+                        _buildInfoCard('Trip', _groupedBytes.length > 6 ? convert('${_groupedBytes[6]}${_groupedBytes[7]}') : '*', width: 150, height: 100),
+                      ],
+                    ),
+                    const SizedBox(height: 15),
+                    _buildInfoCard('Temperature', _groupedBytes.length > 32 ? convert(_groupedBytes[14]) : '*', width: 170, height: 100),
+                    const SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildInfoCard('BMS', _groupedBytes.length > 14 ? convert('${_groupedBytes[32]}${_groupedBytes[33]}') : '*', width: 150, height: 100),
+                        _buildInfoCard('MOS', _groupedBytes.length > 27 ? convert(_groupedBytes[27]) : '*', width: 150, height: 100),
+                      ],
+                    ),
+                    const SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildInfoCard('Current', _groupedBytes.length > 42 ? convert('${_groupedBytes[42]}${_groupedBytes[43]}') : '*', width: 150, height: 100),
+                        _buildInfoCard('Voltage', _groupedBytes.length > 34 ? convert('${_groupedBytes[34]}${_groupedBytes[35]}') : '*', width: 150, height: 100),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
               const Padding(
                 padding: EdgeInsets.all(16.0),
                 child: Text(
@@ -170,6 +208,46 @@ class _FireWallState extends State<FireWall> {
                     color: secondaryColor,
                     fontSize: 14,
                   ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(String title, String subtitle,
+      {double width = 100, double height = 80}) {
+    return SizedBox(
+      width: width,
+      height: height,
+      child: Card(
+        color: Colors.white.withOpacity(0.8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        elevation: 5,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueAccent,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.blueAccent.withOpacity(0.7),
                 ),
               ),
             ],

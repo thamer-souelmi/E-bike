@@ -2,18 +2,48 @@ import 'package:e_bike/screens/devices.dart';
 import 'package:e_bike/screens/firewall.dart';
 import 'package:e_bike/widgets/form.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
 
+
   @override
   Widget build(BuildContext context) {
+    bool _isRequestingPermission = false;
+    Future<bool> requestStoragePermission() async {
+      if (_isRequestingPermission) {
+        print("Permission request already in progress...");
+        return false;
+      }
+
+      _isRequestingPermission = true;
+
+      var status = await Permission.storage.status;
+      if (status.isGranted) {
+        _isRequestingPermission = false;
+        return true;
+      } else if (status.isDenied || status.isRestricted) {
+        status = await Permission.storage.request();
+        _isRequestingPermission = false;
+        if (status.isGranted) {
+          return true;
+        } else if (status.isPermanentlyDenied) {
+          openAppSettings();
+          return false;
+        }
+      }
+
+      _isRequestingPermission = false;
+      return false;
+    }
     // Define a color palette
     const Color primaryColor = Colors.blueAccent;
     const Color secondaryColor = Colors.white;
     const Color accentColor = Colors.orangeAccent;
 
     return Scaffold(
+
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -25,6 +55,7 @@ class Home extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
+
               // Custom App Bar
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 20.0),
@@ -148,7 +179,7 @@ class Home extends StatelessWidget {
                               ),
                               SizedBox(height: 10),
                               Text(
-                                'FireWall',
+                                'Firmware ',
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w600,

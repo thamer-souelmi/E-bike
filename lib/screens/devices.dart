@@ -76,13 +76,14 @@ class _DevicesState extends State<Devices> {
   String getDeviceName(String device) {
     switch (device) {
       case "0060F9":
-        return "eMTB";
+        return "BMS";
       case "0060F6":
-        return "MOBUS DT3";
+        return "CTRL";
       default:
         return "Unknown Device";
     }
   }
+  List<String> devicees = ['BMS','CTRL'];
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +164,7 @@ class _DevicesState extends State<Devices> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                getDeviceName(device),
+                                devicees[index],
                                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                   color: isSelected ? Colors.white : Colors.black,
                                 ),
