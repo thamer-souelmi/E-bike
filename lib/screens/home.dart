@@ -1,5 +1,5 @@
 import 'package:e_bike/screens/devices.dart';
-import 'package:e_bike/screens/firewall.dart';
+import 'package:e_bike/screens/diag.dart';
 import 'package:e_bike/widgets/form.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -159,7 +159,7 @@ class Home extends StatelessWidget {
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => const FireWall(),
+                              builder: (context) => const Diag(),
                             ),
                           );
                         },
@@ -179,7 +179,7 @@ class Home extends StatelessWidget {
                               ),
                               SizedBox(height: 10),
                               Text(
-                                'Firmware ',
+                                'Diag ',
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w600,
