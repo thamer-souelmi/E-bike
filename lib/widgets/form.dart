@@ -1,5 +1,6 @@
 import 'package:e_bike/data/gattservice.dart';
 import 'package:e_bike/data/notificationService.dart';
+import 'package:e_bike/screens/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:provider/provider.dart';
@@ -113,6 +114,10 @@ class _FormScreenState extends State<FormScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Data sent to GATT service')),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => Home()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -117,15 +117,19 @@ class _FireWallState extends State<Diag> {
   Future<void> _stopAndSaveExcel() async {
     _isSaving = false; // Set saving flag to false
 
+    // Generate a unique filename using timestamp
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final path = '/storage/emulated/0/Download/e_bike_data_$timestamp.xlsx';
+
     // Save the file
     var fileBytes = _excel.save();
-    final path = '/storage/emulated/0/Download/e_bike_data.xlsx';
     File(path)
       ..createSync(recursive: true)
       ..writeAsBytesSync(fileBytes!);
 
     print('Data saved to $path');
   }
+
 
   Future<void> _saveDataToExcel() async {
     if (!_isSaving) {
