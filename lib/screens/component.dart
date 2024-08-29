@@ -17,7 +17,7 @@ class _ComponentState extends ConsumerState<Component> {
   List<String> components = [];
   String? selectedComponent;
   String? componentDetails;
-  String selectedType = 'Software'; // Default to Software
+  String selectedType = 'Software';
 
   final Map<String, String> componentNames = {
     '01': 'CPU APP',

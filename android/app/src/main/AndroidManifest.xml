@@ -23,7 +23,7 @@
     <application
         android:label="e_bike"
         android:name="${applicationName}"
-        android:icon="@mipmap/logo"
+        android:icon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true"
         android:usesCleartextTraffic="true">
 

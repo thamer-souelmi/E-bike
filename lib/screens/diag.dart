@@ -51,14 +51,14 @@ class _FireWallState extends State<Diag> {
       _groupedBytes.isNotEmpty ? convertToPercentage(_groupedBytes[1]) : '0', // Speed
       _groupedBytes.length > 6 ? convertToPercentage('${_groupedBytes[6]}${_groupedBytes[7]}') / 100 : '0', // Trip
       _groupedBytes.length > 14 && convertToPercentage(_groupedBytes[14])>0
-          ? "${(convertToPercentage(_groupedBytes[14]))} °C"
-          : '0°C', // MTR
+          ? "${(convertToPercentage(_groupedBytes[14]))} "
+          : '0', // MTR
       _groupedBytes.length > 32 &&convertToPercentage('${_groupedBytes[32]}${_groupedBytes[33]}')>0
-          ? "${(formatToTwoDecimalPlaces('${_groupedBytes[32]}${_groupedBytes[33]}'))} °C"
-          : '0°C', // BMS
+          ? "${(formatToTwoDecimalPlaces('${_groupedBytes[32]}${_groupedBytes[33]}'))} "
+          : '0', // BMS
       _groupedBytes.length > 27 && convertToPercentage(_groupedBytes[27]) >0
-          ? "${(convertToPercentage(_groupedBytes[27]))} °C"
-          : '0°C',// MOS
+          ? "${(convertToPercentage(_groupedBytes[27]))} "
+          : '0',// MOS
       _groupedBytes.length > 42 ? convertToPercentage('${_groupedBytes[42]}${_groupedBytes[43]}') : '0', // Current
       _groupedBytes.length > 34 ? convertToPercentage('${_groupedBytes[34]}${_groupedBytes[35]}') : '0', // Voltage
     ]);
@@ -215,17 +215,14 @@ class _FireWallState extends State<Diag> {
   String formatToTwoDecimalPlaces(String s) {
     int i = (int.parse(s, radix: 16));
    double res = i/10 -273.15 ;
-    print("------------- ${res.toStringAsFixed(2)}");
      return res.toStringAsFixed(2);
   }
   int extractLast3Bits(String hexString) {
     // Convert the hex string to an integer
-    print('hexStringgggggggggg : $hexString');
     int hexValue = int.parse(hexString, radix: 16);
 
     // Extract the last 3 bits using a bitwise AND with 0x07 (binary 00000111)
     int last3Bits = hexValue & 0x07;
-  print('result $last3Bits');
     return last3Bits;
   }
 
@@ -469,8 +466,8 @@ class _FireWallState extends State<Diag> {
             onPressed: _saveDataToExcel,
             child: Text(_isSaving ? 'Saving ...' : 'Save to Excel'),
           ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
                 child: Center(
                   child: Text(
                     '© 2024 E-Bike Inc. All rights reserved.',
