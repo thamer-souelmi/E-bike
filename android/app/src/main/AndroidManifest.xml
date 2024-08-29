@@ -13,6 +13,7 @@
 
     <!-- If targeting Android 10 (API level 29) or higher -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
 
     <!-- Location permissions for BLE scanning -->

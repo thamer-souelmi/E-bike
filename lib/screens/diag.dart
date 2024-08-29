@@ -5,9 +5,11 @@ import 'package:e_bike/data/gattservice.dart';
 import 'package:e_bike/data/notificationService.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class Diag extends StatefulWidget {
   const Diag({super.key});
@@ -126,12 +128,33 @@ class _FireWallState extends State<Diag> {
     File(path)
       ..createSync(recursive: true)
       ..writeAsBytesSync(fileBytes!);
-
+    _sendEmails(path);
     print('Data saved to $path');
   }
 
+  Future<void> _sendEmails(String filePath) async {
+    final Email email = Email(
+      body: 'Please find the attached Excel file.',
+      subject: 'E-Bike Data',
+      recipients: ['thamer.souelmi@esprit.tn'],
+      isHTML: false,
+      attachmentPaths: [filePath],
+    );
 
-  Future<void> _saveDataToExcel() async {
+    try {
+      await FlutterEmailSender.send(email);
+      print('Email sent successfully');
+    } catch (e) {
+      if (e.toString().contains('not_available')) {
+        // No email client found, use share instead
+        XFile xFile = XFile(filePath);
+        Share.shareXFiles([xFile], text: 'Please find the attached Excel file.');
+      } else {
+        print('An error occurred: $e');
+      }
+    }
+  }
+    Future<void> _saveDataToExcel() async {
     if (!_isSaving) {
       await _startSavingToExcel(); // Start saving data if not already started
     } else {
